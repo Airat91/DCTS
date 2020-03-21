@@ -33,7 +33,7 @@ typedef enum {
     DCTS_ID_RELE                = 5,    // 0x05 - Исполнительные устройства релейного типа.
     DCTS_ID_ACTUATOR            = 6,    // 0x06 - Исполнительные устройства с обратной связью.
     DCTS_ID_MEASURE             = 7,    // 0x07 - Измерительные устройства.
-}dcts_id_t;
+} dcts_id_t;
 /**
   * @brief DCTS RTC
   * @ingroup DCTS
@@ -52,17 +52,17 @@ typedef struct {                // структура, содержащая да
   * @ingroup DCTS
   */
 extern typedef struct{
-    dcts_id_t dcts_id;      // тип устройства
-    char dcts_ver[9];       // версия DCTS библиотеки
-    char dcts_name[9];      // имя устройства (можно использовать кириллицу, например "Теплица")
-    uint8_t dcts_address;   // адрес устройства в системе (по умолчанию 0xFF)
-    rtc_t dcts_rtc;         // RTC устройства
-    float dcts_pwr;         // напряжение питания на входе устройства в В
-    uint8_t dcts_meas_num;  // количество измерительных каналов устройства
-    uint8_t dcts_rele_num;  // количество дискретно управляемых каналов устройства
-    uint8_t dcts_act_num;   // количество аналогово управляемых каналов устройства
-    uint8_t dcts_alrm_num;  // количество будильников устройства
-}
+    const dcts_id_t dcts_id;      // тип устройства
+    const char dcts_ver[9];       // версия DCTS библиотеки
+    const char dcts_name[9];      // имя устройства (можно использовать кириллицу, например "Теплица")
+    uint8_t dcts_address;         // адрес устройства в системе (по умолчанию 0xFF)
+    rtc_t dcts_rtc;               // RTC устройства
+    float dcts_pwr;               // напряжение питания на входе устройства в В
+    const uint8_t dcts_meas_num;  // количество измерительных каналов устройства
+    const uint8_t dcts_rele_num;  // количество дискретно управляемых каналов устройства
+    const uint8_t dcts_act_num;   // количество аналогово управляемых каналов устройства
+    const uint8_t dcts_alrm_num;  // количество будильников устройства
+} dcts_t;
 /**
   * @brief Struct for measure channel
   * @ingroup DCTS
@@ -146,6 +146,7 @@ typedef struct {
     uint8_t     enable;         // состояние будильника (0 - выключенб 1 - включен)
 } alrm_t;
 
+extern dcts_t dcts;
 extern meas_t dcts_meas[];
 extern rele_t dcts_rele[];
 extern act_t dcts_act[];
