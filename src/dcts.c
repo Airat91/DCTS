@@ -1,6 +1,10 @@
 #include "dcts.h"
 #include "string.h"
 #include "cmsis_os.h"
+#include "stdint.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "stm32f1xx_hal.h"
 
 /*========== GLOBAL VARIABLES ==========*/
 
