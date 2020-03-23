@@ -13,9 +13,17 @@
 /**
   * @defgroup DCTS
   */
-#include "dcts_config.h"
+//#include "dcts_config.h"
+#include "stm32f1xx_hal_def.h"
+#include <stdint.h>
 
-
+#define CHANNEL_NAME_LEN    9
+#define UNIT_NAME_LEN       5
+#define DEVICE_NAME_LEN     9
+#define MEAS_NUM    5
+#define ACT_NUM     1
+#define RELE_NUM    0
+#define ALRM_NUM    0
 
 /*========== GLOBAL VARABLES ==========*/
 
@@ -51,10 +59,10 @@ typedef struct {                // структура, содержащая да
   * @brief Main DCTS struct
   * @ingroup DCTS
   */
-extern typedef struct{
+typedef struct{
     const dcts_id_t dcts_id;      // тип устройства
     const char dcts_ver[9];       // версия DCTS библиотеки
-    const char dcts_name[9];      // имя устройства (можно использовать кириллицу, например "Теплица")
+    const char dcts_name[15];     // имя устройства (можно использовать кириллицу, например "Теплица")
     uint8_t dcts_address;         // адрес устройства в системе (по умолчанию 0xFF)
     rtc_t dcts_rtc;               // RTC устройства
     float dcts_pwr;               // напряжение питания на входе устройства в В
@@ -67,11 +75,11 @@ extern typedef struct{
   * @brief Struct for measure channel
   * @ingroup DCTS
   */
-typedef struct {                // таблица структур, содержащая данные измеряемых параметров
-    char        name[9];        // строковое название измеряемого параметра (можно использовать кириллицу, 
-                                // например "Гор.вода")
-    char        unit[5];        // строковая запись единиц измерения (можно использовать кириллицу, например "л")
-    float       value;          // значение измеряемого параметра
+typedef struct {                        // таблица структур, содержащая данные измеряемых параметров
+    char        name[CHANNEL_NAME_LEN]; // строковое название измеряемого параметра (можно использовать кириллицу,
+                                        // например "Гор.вода")
+    char        unit[UNIT_NAME_LEN];    // строковая запись единиц измерения (можно использовать кириллицу, например "л")
+    float       value;                  // значение измеряемого параметра
 } meas_t;
 /**
   * @brief Struct for rele channel state
@@ -94,10 +102,10 @@ typedef struct {
   * @brief Struct for rele channel
   * @ingroup DCTS
   */
-typedef struct {                // таблица структур, содержащая данные дискретно управляемых исполнительных устройств
-    char        name[9];        // строковое название дискретно управляемого исполнительного устройства
-                                // (можно использовать кириллицу, например "Полив")
-    rele_st     state;          // состояниие дискретно управляемого исполнительного устройства (см. rele_st)
+typedef struct {                        // таблица структур, содержащая данные дискретно управляемых исполнительных устройств
+    char        name[CHANNEL_NAME_LEN]; // строковое название дискретно управляемого исполнительного устройства
+                                        // (можно использовать кириллицу, например "Полив")
+    rele_st     state;                  // состояниие дискретно управляемого исполнительного устройства (см. rele_st)
 } rele_t;
 /**
   * @brief Struct for analog channel state
@@ -119,13 +127,13 @@ typedef struct {
   * @brief Struct for analog channel state
   * @ingroup DCTS
   */
-typedef struct {                // таблица структур, содержащая данные плавно управляемых исполнительных устройств
-    char        name[9];        // строковое название плавно управляемого исполнительного устройства
-                                // (можно использовать кириллицу, например "Задвижка")
-    char        unit[5];        // строковая запись единиц измерения (можно использовать кириллицу, например "л")
-    float       set_value;      // заданное значение плавно управляемого исполнительного устройства
-    float       meas_value;     // измеренное значение плавно управляемого исполнительного устройства
-    act_st      state;          // состояниие плавно управляемого исполнительного устройства (см. act_st)
+typedef struct {                        // таблица структур, содержащая данные плавно управляемых исполнительных устройств
+    char        name[CHANNEL_NAME_LEN]; // строковое название плавно управляемого исполнительного устройства
+                                        // (можно использовать кириллицу, например "Задвижка")
+    char        unit[UNIT_NAME_LEN];    // строковая запись единиц измерения (можно использовать кириллицу, например "л")
+    float       set_value;              // заданное значение плавно управляемого исполнительного устройства
+    float       meas_value;             // измеренное значение плавно управляемого исполнительного устройства
+    act_st      state;                  // состояниие плавно управляемого исполнительного устройства (см. act_st)
 } act_t;
 /**
   * @brief Struct for alarm time
@@ -141,9 +149,9 @@ typedef struct {                // структура, которая содер
   * @ingroup DCTS
   */
 typedef struct {
-    char        name[9];        // строковое название будильника (можно использовать кириллицу, например "Полив")
-    alarm_time_t time;          // время срабатывания будильника (ежедневно)
-    uint8_t     enable;         // состояние будильника (0 - выключенб 1 - включен)
+    char        name[CHANNEL_NAME_LEN]; // строковое название будильника (можно использовать кириллицу, например "Полив")
+    alarm_time_t time;                  // время срабатывания будильника (ежедневно)
+    uint8_t     enable;                 // состояние будильника (0 - выключенб 1 - включен)
 } alrm_t;
 
 extern dcts_t dcts;
@@ -157,7 +165,7 @@ extern alrm_t dcts_alrm[];
 
 /*========== FUNCTION PROTOTYPES ==========*/
 
-void dcts_init (void);
+__weak void dcts_init (void);
 void dcts_write_meas_value (uint8_t meas_channel, float value);
 void dcts_write_act_meas_value (uint8_t act_channel, float value);
 void dcts_write_act_set_value (uint8_t act_channel, float value);
