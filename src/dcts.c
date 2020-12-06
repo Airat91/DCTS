@@ -1,4 +1,5 @@
 #include "dcts.h"
+#include "dcts_config.h"
 #include "string.h"
 #include "cmsis_os.h"
 #include <type_def.h>
@@ -6,21 +7,10 @@
 #include "task.h"
 #include "stm32f1xx_hal.h"
 
-/*========== GLOBAL VARIABLES ==========*/
-
-dcts_t dcts = {
-    .dcts_id = DCTS_ID_COMBINED,
-    .dcts_ver = {"0.0.1"},
-    .dcts_name = {"Thermostat"},
-    .dcts_address = 0xFF,
-    .dcts_rtc = {1,1,2000,6,12,0,0},
-    .dcts_pwr = 0.0,
-    .dcts_meas_num = MEAS_NUM,
-    .dcts_rele_num = 0,
-    .dcts_act_num  = ACT_NUM,
-    .dcts_alrm_num = 0,
-};
-
+/**
+  * @addtogroup button
+  * @{
+  */
 #if (MEAS_NUM)
 meas_t dcts_meas[MEAS_NUM];
 #endif // MEAS_NUM
@@ -33,8 +23,30 @@ act_t dcts_act[ACT_NUM];
 #if (ALRM_NUM)
 alrm_t dcts_alrm[ALRM_NUM];
 #endif // ALRM_NUM
+/**
+  * @}
+  */
 
-/*========== DCTS FUNCTIONS ==========*/
+/*========== GLOBAL VARS ==========*/
+
+/**
+  * @brief var for dcts params
+  * @ingroup DCTS
+  */
+dcts_t dcts = {
+    .dcts_id = DCTS_ID_COMBINED,
+    .dcts_ver = {"0.0.2"},
+    .dcts_name = {"Баня"},
+    .dcts_address = 0xFF,
+    .dcts_rtc = {1,1,2000,6,12,0,0},
+    .dcts_pwr = 0.0,
+    .dcts_meas_num = MEAS_NUM,
+    .dcts_rele_num = 0,
+    .dcts_act_num  = ACT_NUM,
+    .dcts_alrm_num = 0,
+};
+
+/*========== FUNCTIONS ==========*/
 
 /**
  * @brief Init global variables
@@ -42,33 +54,57 @@ alrm_t dcts_alrm[ALRM_NUM];
  */
 __weak void dcts_init () {
 
-    strcpy (dcts_meas[0].name, "Floor");
-    strcpy (dcts_meas[0].unit, "°C");
+    strcpy (dcts_meas[0].name, "Уровень\0");
+    strcpy (dcts_meas[0].unit, "л\0");
     dcts_meas[0].value = 0;
-    
-    strcpy (dcts_meas[1].name, "Reg");
-    strcpy (dcts_meas[1].unit, "°C");
+
+    strcpy (dcts_meas[1].name, "Уровень АЦП\0");
+    strcpy (dcts_meas[1].unit, "adc\0");
     dcts_meas[1].value = 0;
-    
-    strcpy (dcts_meas[2].name, "Rh");
-    strcpy (dcts_meas[2].unit, "%");
+
+    strcpy (dcts_meas[2].name, "Уровень В\0");
+    strcpy (dcts_meas[2].unit, "V\0");
     dcts_meas[2].value = 0;
 
-    strcpy (dcts_meas[3].name, "ADC0");
-    strcpy (dcts_meas[3].unit, "V");
+    strcpy (dcts_meas[3].name, "Темп. воды\0");
+    strcpy (dcts_meas[3].unit, "°C\0");
     dcts_meas[3].value = 0;
-    strcpy (dcts_meas[4].name, "ADC1");
-    strcpy (dcts_meas[4].unit, "V");
+
+    strcpy (dcts_meas[4].name, "Темп. воды АЦП\0");
+    strcpy (dcts_meas[4].unit, "adc\0");
     dcts_meas[4].value = 0;
 
-    strcpy (dcts_act[0].name, "Floor");
-    strcpy (dcts_act[0].unit, "°C");
-    dcts_act[0].set_value = 27.0f;
-    dcts_act[0].meas_value = 0.0f;
-    dcts_act[0].state.control = TRUE;
-    dcts_act[0].state.pin_state = FALSE;
-    dcts_act[0].state.short_cir = FALSE;
-    dcts_act[0].state.fall = FALSE;
+    strcpy (dcts_meas[5].name, "Темп. воды В\0");
+    strcpy (dcts_meas[5].unit, "V\0");
+    dcts_meas[5].value = 0;
+
+    strcpy (dcts_meas[6].name, "Темп. предбанник\0");
+    strcpy (dcts_meas[6].unit, "°C\0");
+    dcts_meas[6].value = 0;
+
+    strcpy (dcts_meas[7].name, "Вл. предбанник\0");
+    strcpy (dcts_meas[7].unit, "%\0");
+    dcts_meas[7].value = 0;
+
+    strcpy (dcts_meas[8].name, "Темп. мойка\0");
+    strcpy (dcts_meas[8].unit, "°C\0");
+    dcts_meas[8].value = 0;
+
+    strcpy (dcts_meas[9].name, "Вл. мойка\0");
+    strcpy (dcts_meas[9].unit, "%\0");
+    dcts_meas[9].value = 0;
+
+    strcpy (dcts_meas[10].name, "Темп. парилка\0");
+    strcpy (dcts_meas[10].unit, "°C\0");
+    dcts_meas[10].value = 0;
+
+    strcpy (dcts_meas[11].name, "ИОН АЦП\0");
+    strcpy (dcts_meas[11].unit, "adc\0");
+    dcts_meas[11].value = 0;
+
+    strcpy (dcts_meas[12].name, "ИОН В\0");
+    strcpy (dcts_meas[12].unit, "V\0");
+    dcts_meas[12].value = 0;
 }
 
 void dcts_write_meas_value (uint8_t meas_channel, float value){
@@ -85,4 +121,10 @@ void dcts_write_act_set_value (uint8_t act_channel, float value){
     taskENTER_CRITICAL();
     dcts_act[act_channel].set_value = value;
     taskEXIT_CRITICAL();
+}
+
+int dcts_packet_handle(uint8_t * buff, uint16_t len){
+    int result = 1;
+
+    return result;
 }

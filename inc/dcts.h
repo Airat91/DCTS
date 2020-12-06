@@ -17,15 +17,17 @@
 #include "stm32f1xx_hal_def.h"
 #include <stdint.h>
 
-#define CHANNEL_NAME_LEN    9
+#define CHANNEL_NAME_LEN    20
 #define UNIT_NAME_LEN       5
-#define DEVICE_NAME_LEN     9
-#define MEAS_NUM    5
-#define ACT_NUM     1
+#define DEVICE_NAME_LEN     20
+#define MEAS_NUM    13
+#define ACT_NUM     0
 #define RELE_NUM    0
 #define ALRM_NUM    0
+#define FALSE   0
+#define TRUE    1
 
-/*========== GLOBAL VARABLES ==========*/
+/*========== TYPEDEFS ==========*/
 
 /**
   * @brief DCTS Devise ID
@@ -80,6 +82,7 @@ typedef struct {                        // таблица структур, со
                                         // например "Гор.вода")
     char        unit[UNIT_NAME_LEN];    // строковая запись единиц измерения (можно использовать кириллицу, например "л")
     float       value;                  // значение измеряемого параметра
+    uint8_t     valid;                  // достоверность измеренного значения
 } meas_t;
 /**
   * @brief Struct for rele channel state
@@ -154,14 +157,13 @@ typedef struct {
     uint8_t     enable;                 // состояние будильника (0 - выключенб 1 - включен)
 } alrm_t;
 
+/*========== GLOBAL VARS ==========*/
+
 extern dcts_t dcts;
 extern meas_t dcts_meas[];
 extern rele_t dcts_rele[];
 extern act_t dcts_act[];
 extern alrm_t dcts_alrm[];
-
-#define FALSE   0
-#define TRUE    1
 
 /*========== FUNCTION PROTOTYPES ==========*/
 
@@ -169,5 +171,6 @@ __weak void dcts_init (void);
 void dcts_write_meas_value (uint8_t meas_channel, float value);
 void dcts_write_act_meas_value (uint8_t act_channel, float value);
 void dcts_write_act_set_value (uint8_t act_channel, float value);
+int dcts_packet_handle(uint8_t * buff, uint16_t len);
 
 #endif /*DCTS*/
