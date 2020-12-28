@@ -35,7 +35,7 @@ alrm_t dcts_alrm[ALRM_NUM];
   */
 dcts_t dcts = {
     .dcts_id = DCTS_ID_COMBINED,
-    .dcts_ver = {"0.0.2"},
+    .dcts_ver = {"1.0.0"},
     .dcts_name = {"Banya"},
     .dcts_name_cyr = {"Баня"},
     .dcts_address = 0x0A,
