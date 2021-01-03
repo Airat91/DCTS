@@ -20,10 +20,18 @@
 #define CHANNEL_NAME_LEN    20
 #define UNIT_NAME_LEN       5
 #define DEVICE_NAME_LEN     20
+#ifndef MEAS_NUM
 #define MEAS_NUM    13
+#endif
+#ifndef ACT_NUM
 #define ACT_NUM     0
+#endif
+#ifndef RELE_NUM
 #define RELE_NUM    0
+#endif
+#ifndef ALRM_NUM
 #define ALRM_NUM    0
+#endif
 #define FALSE   0
 #define TRUE    1
 
@@ -62,17 +70,17 @@ typedef struct {                // структура, содержащая да
   * @ingroup DCTS
   */
 typedef struct{
-    const dcts_id_t dcts_id;      // тип устройства
-    const char dcts_ver[9];       // версия DCTS библиотеки
-    const char dcts_name[15];     // имя устройства латиницей
-    const char dcts_name_cyr[15]; // имя устройства кириллицей
-    uint8_t dcts_address;         // адрес устройства в системе (по умолчанию 0xFF)
-    rtc_t dcts_rtc;               // RTC устройства
-    float dcts_pwr;               // напряжение питания на входе устройства в В
-    const uint8_t dcts_meas_num;  // количество измерительных каналов устройства
-    const uint8_t dcts_rele_num;  // количество дискретно управляемых каналов устройства
-    const uint8_t dcts_act_num;   // количество аналогово управляемых каналов устройства
-    const uint8_t dcts_alrm_num;  // количество будильников устройства
+    dcts_id_t dcts_id;      // тип устройства
+    char dcts_ver[9];       // версия DCTS библиотеки
+    char dcts_name[15];     // имя устройства латиницей
+    char dcts_name_cyr[15]; // имя устройства кириллицей
+    uint8_t dcts_address;   // адрес устройства в системе (по умолчанию 0xFF)
+    rtc_t dcts_rtc;         // RTC устройства
+    float dcts_pwr;         // напряжение питания на входе устройства в В
+    uint8_t dcts_meas_num;  // количество измерительных каналов устройства
+    uint8_t dcts_rele_num;  // количество дискретно управляемых каналов устройства
+    uint8_t dcts_act_num;   // количество аналогово управляемых каналов устройства
+    uint8_t dcts_alrm_num;  // количество будильников устройства
 } dcts_t;
 /**
   * @brief Struct for measure channel
@@ -176,5 +184,9 @@ void dcts_write_meas_value (uint8_t meas_channel, float value);
 void dcts_write_act_meas_value (uint8_t act_channel, float value);
 void dcts_write_act_set_value (uint8_t act_channel, float value);
 int dcts_packet_handle(uint8_t * buff, uint16_t len);
+int dcts_meas_channel_init(uint8_t Channel, char Name[], char Name_cyr[], char Unit[], char Unit_cyr[]);
+int dcts_act_channel_init(uint8_t Channel, char Name[], char Name_cyr[], char Unit[], char Unit_cyr[]);
+int dcts_rele_channel_init(uint8_t Channel, char Name[], char Name_cyr[]);
+int dcts_alrm_channel_init(uint8_t Channel, char Name[], char Name_cyr[]);
 
 #endif /*DCTS*/

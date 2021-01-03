@@ -33,19 +33,7 @@ alrm_t dcts_alrm[ALRM_NUM];
   * @brief var for dcts params
   * @ingroup DCTS
   */
-dcts_t dcts = {
-    .dcts_id = DCTS_ID_COMBINED,
-    .dcts_ver = {"0.0.2"},
-    .dcts_name = {"Banya"},
-    .dcts_name_cyr = {"Баня"},
-    .dcts_address = 0x0A,
-    .dcts_rtc = {1,1,2000,6,12,0,0},
-    .dcts_pwr = 0.0,
-    .dcts_meas_num = MEAS_NUM,
-    .dcts_rele_num = 0,
-    .dcts_act_num  = ACT_NUM,
-    .dcts_alrm_num = 0,
-};
+dcts_t dcts = {0};
 
 /*========== FUNCTIONS ==========*/
 
@@ -132,6 +120,105 @@ __weak void dcts_init () {
     strcpy (dcts_meas[12].unit, "V\0");
     strcpy (dcts_meas[12].unit_cyr, "В\0");
     dcts_meas[12].value = 0;
+}
+
+/**
+ * @brief Set meas_t channel params
+ * @param Channel - channel number
+ * @param Name
+ * @param Name_cyr
+ * @param Unit
+ * @param Unit_cyr
+ * @return  0 - OK\n,
+ *          -1 - Channel number out of range
+ */
+int dcts_meas_channel_init(uint8_t Channel, char Name[], char Name_cyr[], char Unit[], char Unit_cyr[]){
+    int result = 0;
+    if (Channel < MEAS_NUM){
+        strcpy (dcts_meas[Channel].name, Name);
+        strcpy (dcts_meas[Channel].name_cyr, Name_cyr);
+        strcpy (dcts_meas[Channel].unit, Unit);
+        strcpy (dcts_meas[Channel].unit_cyr, Unit_cyr);
+        dcts_meas[Channel].value = 0.0f;
+        dcts_meas[Channel].valid = 0;
+    }else{
+        result = -1;
+    }
+    return result;
+}
+/**
+ * @brief Set act_t channel params
+ * @param Channel - channel number
+ * @param Name
+ * @param Name_cyr
+ * @param Unit
+ * @param Unit_cyr
+ * @return  0 - OK\n,
+ *          -1 - Channel number out of range
+ */
+int dcts_act_channel_init(uint8_t Channel, char Name[], char Name_cyr[], char Unit[], char Unit_cyr[]){
+    int result = 0;
+    if (Channel < ACT_NUM){
+        strcpy (dcts_act[Channel].name, Name);
+        strcpy (dcts_act[Channel].name_cyr, Name_cyr);
+        strcpy (dcts_act[Channel].unit, Unit);
+        strcpy (dcts_act[Channel].unit_cyr, Unit_cyr);
+        dcts_act[Channel].set_value = 0;
+        dcts_act[Channel].meas_value = 0;
+        dcts_act[Channel].state.control = 0;
+        dcts_act[Channel].state.pin_state = 0;
+        dcts_act[Channel].state.fall = 0;
+        dcts_act[Channel].state.short_cir = 0;
+    }else{
+        result = -1;
+    }
+    return result;
+}
+
+/**
+ * @brief Set rele_t channel params
+ * @param Channel
+ * @param Name
+ * @param Name_cyr
+ * @return  0 - OK\n,
+ *          -1 - Channel number out of range
+ */
+int dcts_rele_channel_init(uint8_t Channel, char Name[], char Name_cyr[]){
+    int result = 0;
+    if (Channel < ACT_NUM){
+        strcpy (dcts_rele[Channel].name, Name);
+        strcpy (dcts_rele[Channel].name_cyr, Name_cyr);
+        dcts_rele[Channel].state.control = 0;
+        dcts_rele[Channel].state.status = 0;
+        dcts_rele[Channel].state.short_cir = 0;
+        dcts_rele[Channel].state.fall = 0;
+    }else{
+        result = -1;
+    }
+    return result;
+}
+
+/**
+ * @brief Set alrm_t channel params
+ * @param Channel
+ * @param Name
+ * @param Name_cyr
+ * @return  0 - OK\n,
+ *          -1 - Channel number out of range
+ */
+int dcts_alrm_channel_init(uint8_t Channel, char Name[], char Name_cyr[]){
+    int result = 0;
+    if (Channel < ACT_NUM){
+        strcpy (dcts_alrm[Channel].name, Name);
+        strcpy (dcts_alrm[Channel].name_cyr, Name_cyr);
+        dcts_alrm[Channel].time.hour = 0;
+        dcts_alrm[Channel].time.minute = 0;
+        dcts_alrm[Channel].time.second = 0;
+        dcts_alrm[Channel].enable = 0;
+    }else{
+        result = -1;
+    }
+    return result;
 }
 
 void dcts_write_meas_value (uint8_t meas_channel, float value){

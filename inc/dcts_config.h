@@ -17,7 +17,7 @@
 
 /*========== MAIN DEFINES ==========*/
 
-typedef enum {
+/*typedef enum {
     WTR_LVL = 0,
     WTR_LVL_ADC,
     WTR_LVL_V,
@@ -32,5 +32,6 @@ typedef enum {
     VREF_ADC,
     VREF_V,
 }dcts_meas_t;
+*/
 
 #endif /*DCTS_CONFIG_H_*/
