@@ -1,4 +1,5 @@
 #include "dcts.h"
+#include "modbus.h"
 #include "dcts_config.h"
 #include "string.h"
 #include "cmsis_os.h"
