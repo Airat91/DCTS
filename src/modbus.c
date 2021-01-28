@@ -201,11 +201,11 @@ dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
             case GROUP_DCTS:
                 result.type = DCTS_VAL_CHAR;
                 if(mdb_addr%1000 < 100){
-                    result.value.p_char = &dcts.dcts_name[channel*2];
+                    result.value.p_char = &dcts.dcts_name[string_pos*2];
                 }else if((mdb_addr%1000 >= 100)&&(mdb_addr%1000 < 200)){
-                    result.value.p_char = &dcts.dcts_name_cyr[channel*2];
+                    result.value.p_char = &dcts.dcts_name_cyr[string_pos*2];
                 }else if((mdb_addr%1000 >= 200)&&(mdb_addr%1000 < 300)){
-                    result.value.p_char = &dcts.dcts_ver[channel*2];
+                    result.value.p_char = &dcts.dcts_ver[string_pos*2];
                 }else{
                     result.error = DCTS_ADDR_ERR;
                 }
@@ -573,8 +573,8 @@ u16 modbus_rtu_packet (u8* pckt,u16 len_in){
                 len_reply = (u8)(regs_numm << 1);
                 pckt[2] = (u8)len_reply;
                 for(uint8_t i = 0; i < regs_numm; i++){
+                    data = modbus_get_dcts_by_mdb_addr(start_address + i);
                     for(uint8_t byte_nmb = 0; byte_nmb < 2; byte_nmb++){
-                        data = modbus_get_dcts_by_mdb_addr(start_address + i);
                         if(data.error == DCTS_ADDR_ERR){
                             error = ILLEGAL_DATA_ADDRESS;
                         }else{
