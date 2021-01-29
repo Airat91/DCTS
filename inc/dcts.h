@@ -53,6 +53,15 @@ typedef enum {
     DCTS_ID_MEASURE             = 7,    // 0x07 - Измерительные устройства.
 } dcts_id_t;
 /**
+  * @brief DCTS RTC state
+  * @ingroup DCTS
+  */
+typedef enum {
+    RTC_STATE_READY = 0,    // готово к работе
+    RTC_STATE_EDIT,         // в режиме редактирования
+    RTC_STATE_SET,          // необходимо записать новые значения
+} rtc_state_t;
+/**
   * @brief DCTS RTC
   * @ingroup DCTS
   */
@@ -64,6 +73,7 @@ typedef struct {                // структура, содержащая да
     uint8_t     hour;           // часы (в 24-часовом формате)
     uint8_t     minute;         // минуты
     uint8_t     second;         // секунды
+    rtc_state_t state;          // состояние часов
 } rtc_t;
 /**
   * @brief Main DCTS struct

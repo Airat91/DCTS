@@ -172,7 +172,10 @@
 /*========= FUNCTIONS ==========*/
 
 dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
-    dcts_mdb_t result = {0};
+    dcts_mdb_t result;
+    result.type = DCTS_VAL_UNKNOWN;
+    result.value.p_f = 0;
+    result.error = DCTS_ERR_OK;
     u8 channel = mdb_addr%100;
     u8 group = GROUP_NONE;
     if(((mdb_addr >= 30000)&&(mdb_addr <= 35000))||\
@@ -278,7 +281,7 @@ dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
                     if(channel%2 == 0){
                         result.value.p_word++;
                     }
-                }else if((mdb_addr%1000 >= 300)&&(mdb_addr%1000 < 307)){    //dcts.rtc
+                }else if((mdb_addr%1000 >= 300)&&(mdb_addr%1000 <= 307)){    //dcts.rtc
                     result.type = DCTS_VAL_BYTE;
                     switch (channel){
                     case 0:
@@ -288,19 +291,22 @@ dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
                         result.value.p_byte = &dcts.dcts_rtc.month;
                         break;
                     case 2:
-                        result.type = DCTS_VAL_WORD;
                         result.value.p_word = &dcts.dcts_rtc.year;
+                        result.value.p_byte++;
                         break;
                     case 3:
-                        result.value.p_byte = &dcts.dcts_rtc.weekday;
+                        result.value.p_word = &dcts.dcts_rtc.year;
                         break;
                     case 4:
-                        result.value.p_byte = &dcts.dcts_rtc.hour;
+                        result.value.p_byte = &dcts.dcts_rtc.weekday;
                         break;
                     case 5:
-                        result.value.p_byte = &dcts.dcts_rtc.minute;
+                        result.value.p_byte = &dcts.dcts_rtc.hour;
                         break;
                     case 6:
+                        result.value.p_byte = &dcts.dcts_rtc.minute;
+                        break;
+                    case 7:
                         result.value.p_byte = &dcts.dcts_rtc.second;
                         break;
                     }
@@ -512,6 +518,7 @@ u8 modbus_packet_for_me(u8* pckt,u16 lenght){
 u16 modbus_rtu_packet (u8* pckt,u16 len_in){
     u16 len_reply;
     u8 error, function;
+    u8 reinit_rtc = 0;
     u16 start_address, regs_numm, num_bit;
     dcts_mdb_t data = {0};
     len_reply = 0;
@@ -631,39 +638,40 @@ u16 modbus_rtu_packet (u8* pckt,u16 len_in){
                     }
                 }
             }
-            break;
-        case 6:*/
+            break;*/
+        case 6:
             /*write one word*/
-            /*{
-                regs_access_t reg;
-                reg.flag = U16_REGS_FLAG;
-                start_address += ((u16)(pckt[2] << 8) + pckt[3]);
-                pool_id = modbus_dinamic_addr_check(start_address, MDB_HOLDING_REGS_RW, 1);
-                if (pool_id >= 0){
-                    base_address = modbus_dinamic_addr_get(pool_id);
-                    start_address -= base_address->address;
-                }else if (start_address >= SELF_MDB_ADDRESS_SPACE_START){
-                    start_address -= SELF_MDB_ADDRESS_SPACE_START;
-                }else{
-                    error = ILLEGAL_DATA_ADDRESS;
-                }
-                if (!error){
-                    reg.value.op_u16 = ((u16)(pckt[4] << 8) + pckt[5]);
-                    len_reply = 8;
-                    if(base_address==NULL){*/
-                        /*write self regs*/
-                        /*if (regs_set((start_address*2),reg)!=0) {
-                            error = ILLEGAL_DATA_ADDRESS;
-                        }
-                    }else{
-                        osMutexWait(user_regs_access_mutex, portMAX_DELAY );{
-                            memcpy(base_address->data + start_address*2,&reg.value.op_u16,2);
-                        }osMutexRelease(user_regs_access_mutex);
+            start_address = ((u16)(pckt[2] << 8) + pckt[3]);
+            data = modbus_get_dcts_by_mdb_addr(start_address );
+            if (data.error == DCTS_ADDR_ERR){
+                error = ILLEGAL_DATA_ADDRESS;
+            }else{
+                switch (data.type) {
+                case DCTS_VAL_BYTE:
+                    if((start_address >= 40300)&&(start_address <= 40307)){
+                        dcts.dcts_rtc.state = RTC_STATE_EDIT;
+                        reinit_rtc = 1;
                     }
+                    taskENTER_CRITICAL();
+                    *data.value.p_byte = pckt[5];
+                    taskEXIT_CRITICAL();
+                    break;
+                case DCTS_VAL_WORD:
+                    taskENTER_CRITICAL();
+                    *data.value.p_word = ((uint16_t)(pckt[4] << 8) + pckt[5]);
+                    taskEXIT_CRITICAL();
+                    break;
+                default:
+                    error = ILLEGAL_DATA_ADDRESS;
+                    break;
                 }
-                break;
+                len_reply = 8;
             }
-        case 15:*/
+            if(reinit_rtc == 1){
+                dcts.dcts_rtc.state = RTC_STATE_SET;
+            }
+            break;
+        /*case 15:*/
             /*write coils only for dinmaic space "coil to byte type"
             in user space used one byte for one coil*/
         /*{
@@ -710,36 +718,44 @@ u16 modbus_rtu_packet (u8* pckt,u16 len_in){
                 error = ILLEGAL_DATA_ADDRESS;
             }
         }
-        break;
-        case 16:*/
+        break;*/
+        case 16:
             /*write words*/
-            /*start_address += ((pckt[2] << 8) + pckt[3]);
+            start_address = ((u16)(pckt[2] << 8) + pckt[3]);
             regs_numm = ((u16)(pckt[4] << 8) + pckt[5]);
-            pool_id = modbus_dinamic_addr_check(start_address, MDB_HOLDING_REGS_RW, regs_numm);
-            if (pool_id >= 0){
-                base_address = modbus_dinamic_addr_get(pool_id);
-                start_address -= base_address->address;
-            }else if (start_address >= SELF_MDB_ADDRESS_SPACE_START){
-                start_address -= SELF_MDB_ADDRESS_SPACE_START;
-            }else{
-                error = ILLEGAL_DATA_ADDRESS;
+            for(u8 i = 0; i < regs_numm; i++){
+                data = modbus_get_dcts_by_mdb_addr(start_address + i);
+                if (data.error == DCTS_ADDR_ERR){
+                    error = ILLEGAL_DATA_ADDRESS;
+                }else{
+                    switch (data.type) {
+                    case DCTS_VAL_BYTE:
+                        if(((start_address + i) >= 40300)&&((start_address + i) <= 40307)){
+                            dcts.dcts_rtc.state = RTC_STATE_EDIT;
+                            reinit_rtc = 1;
+                        }
+                        taskENTER_CRITICAL();
+                        *data.value.p_byte = pckt[8+i*2];
+                        taskEXIT_CRITICAL();
+                        break;
+                    case DCTS_VAL_WORD:
+                        taskENTER_CRITICAL();
+                        *data.value.p_word = ((uint16_t)(pckt[8+i*2] << 8) + pckt[9+i*2]);
+                        taskEXIT_CRITICAL();
+                        break;
+                    default:
+                        error = ILLEGAL_DATA_ADDRESS;
+                        break;
+                    }
+                }
+            }
+            if(reinit_rtc == 1){
+                dcts.dcts_rtc.state = RTC_STATE_SET;
             }
             if (!error){
-                htons_buff((u16*)(void*)(pckt+7), (u8)regs_numm);
-                if (base_address==NULL){
-                    if (regs_set_buffer(start_address*2, (u8*)(pckt+7), regs_numm*2)!=0) {
-                        error = ILLEGAL_DATA_ADDRESS;
-                    }
-                }else{
-                    osMutexWait(user_regs_access_mutex, portMAX_DELAY );{
-                        memcpy(base_address->data + start_address*2, (u8*)(pckt+7), regs_numm*2);
-                    }osMutexRelease(user_regs_access_mutex);
-                }
-                if (!error){
-                    len_reply = 8;
-                }
+                len_reply = 8;
             }
-            break;*/
+            break;
         default:
             error = ILLEGAL_FUNCTION;
             break;
