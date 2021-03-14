@@ -134,7 +134,7 @@
     4240X - dcts_rele[X].state.status       (uint8_t)
     4250X - dcts_rele[X].state.short_cir    (uint8_t)
     4260X - dcts_rele[X].state.fall         (uint8_t)
-    4270X -                                 (uint8_t)
+    4270X - dcts_rele[X].state.control_by_act   (uint8_t)
     4280X -                                 (uint8_t)
     4290X -                                 (uint8_t)
 
@@ -359,10 +359,12 @@ dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
                     result.value.p_byte = &dcts_rele[channel].state.control;
                 }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < MEAS_NUM)){
                     result.value.p_byte = &dcts_rele[channel].state.status;
-                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < MEAS_NUM)){
+                }else if((mdb_addr%1000 >= 500)&&(mdb_addr%1000 < 600)&&(channel < MEAS_NUM)){
                     result.value.p_byte = &dcts_rele[channel].state.short_cir;
-                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < MEAS_NUM)){
+                }else if((mdb_addr%1000 >= 600)&&(mdb_addr%1000 < 700)&&(channel < MEAS_NUM)){
                     result.value.p_byte = &dcts_rele[channel].state.fall;
+                }else if((mdb_addr%1000 >= 700)&&(mdb_addr%1000 < 800)&&(channel < MEAS_NUM)){
+                    result.value.p_byte = &dcts_rele[channel].state.control_by_act;
                 }else{
                     result.error = DCTS_ADDR_ERR;
                 }

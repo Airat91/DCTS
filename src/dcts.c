@@ -193,6 +193,7 @@ int dcts_rele_channel_init(uint8_t Channel, char Name[], char Name_cyr[]){
         dcts_rele[Channel].state.status = 0;
         dcts_rele[Channel].state.short_cir = 0;
         dcts_rele[Channel].state.fall = 0;
+        dcts_rele[Channel].state.control_by_act = 0;
     }else{
         result = -1;
     }
