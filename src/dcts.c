@@ -164,8 +164,9 @@ int dcts_act_channel_init(uint8_t Channel, char Name[], char Name_cyr[], char Un
         strcpy (dcts_act[Channel].name_cyr, Name_cyr);
         strcpy (dcts_act[Channel].unit, Unit);
         strcpy (dcts_act[Channel].unit_cyr, Unit_cyr);
-        dcts_act[Channel].set_value = 0;
-        dcts_act[Channel].meas_value = 0;
+        dcts_act[Channel].set_value = 0.0;
+        dcts_act[Channel].meas_value = 0.0;
+        dcts_act[Channel].hysteresis = 0.5;
         dcts_act[Channel].state.control = 0;
         dcts_act[Channel].state.pin_state = 0;
         dcts_act[Channel].state.fall = 0;
