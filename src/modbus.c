@@ -78,6 +78,17 @@
     348X0 -                         (char)*2
     349X0 -                         (char)*2
 
+    350X0 - dcts_num_array[X].name      (char)*2
+    351X0 - dcts_num_array[X].name_cyr  (char)*2
+    352X0 -                         (char)*2
+    353X0 -                         (char)*2
+    354X0 -                         (char)*2
+    355X0 -                         (char)*2
+    356X0 -                         (char)*2
+    357X0 -                         (char)*2
+    358X0 -                         (char)*2
+    359X0 -                         (char)*2
+
     4XXXX - values
     4X0XX, 4X1XX, 4X2XX - (float)/2
     4X3XX, 4X4XX, 4X5XX, 4X6XX, 4X7XX, 4X8XX, 4X9XX - (uint8_t)
@@ -165,6 +176,14 @@
     4470X -                                 (uint8_t)
     4480X -                                 (uint8_t)
     4490X -                                 (uint8_t)
+
+    45X0Y - dcts_num_array[X].array[Y]      (float,uint32_t,int32_t)/2 HIGH
+    45X0Y+1 - dcts_num_array[X].array[Y]    (float,uint32_t,int32_t)/2 LOW
+    or
+    45X0Y - dcts_num_array[X].array[Y]      (uint8_t,int8_t,uint16_t,int16_t)
+    4570X - dcts_num_array[X].type          (uint8_t)
+    4580X - dcts_num_array[X].size_in_bytes (uint8_t)
+    4590X - dcts_num_array[X].array_size    (uint8_t)
 */
 
 /*========= GLOBAL VARIABLES ==========*/
@@ -195,6 +214,9 @@ dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
             break;
         case 4:    //dcts_alrm texts
             group = GROUP_ALRM;
+            break;
+        case 5:    //dcts_array texts
+            group = GROUP_ARRAY;
             break;
         }
         if(mdb_addr/10000 == 3){    //30000..35000 - string data
@@ -269,6 +291,18 @@ dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
                 }
                 break;
 #endif //ALRM_NUM
+#if ARRAY_NUM
+            case GROUP_ARRAY:
+                result.type = DCTS_VAL_CHAR;
+                if(mdb_addr%1000 < 100){
+                    result.value.p_char = &dcts_array[channel].name[string_pos*2];
+                }else if((mdb_addr%1000 >= 100)&&(mdb_addr%1000 < 200)){
+                    result.value.p_char = &dcts_array[channel].name_cyr[string_pos*2];
+                }else{
+                    result.error = DCTS_ADDR_ERR;
+                }
+                break;
+#endif //ARRAY_NUM
             default:
                 result.error = DCTS_ADDR_ERR;
             }
@@ -355,15 +389,15 @@ dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
 #if RELE_NUM
             case GROUP_RELE:
                 result.type = DCTS_VAL_BYTE;
-                if((mdb_addr%1000 >= 300)&&(mdb_addr%1000 < 400)&&(channel < MEAS_NUM)){
+                if((mdb_addr%1000 >= 300)&&(mdb_addr%1000 < 400)&&(channel < RELE_NUM)){
                     result.value.p_byte = &dcts_rele[channel].state.control;
-                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < MEAS_NUM)){
+                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < RELE_NUM)){
                     result.value.p_byte = &dcts_rele[channel].state.status;
-                }else if((mdb_addr%1000 >= 500)&&(mdb_addr%1000 < 600)&&(channel < MEAS_NUM)){
+                }else if((mdb_addr%1000 >= 500)&&(mdb_addr%1000 < 600)&&(channel < RELE_NUM)){
                     result.value.p_byte = &dcts_rele[channel].state.short_cir;
-                }else if((mdb_addr%1000 >= 600)&&(mdb_addr%1000 < 700)&&(channel < MEAS_NUM)){
+                }else if((mdb_addr%1000 >= 600)&&(mdb_addr%1000 < 700)&&(channel < RELE_NUM)){
                     result.value.p_byte = &dcts_rele[channel].state.fall;
-                }else if((mdb_addr%1000 >= 700)&&(mdb_addr%1000 < 800)&&(channel < MEAS_NUM)){
+                }else if((mdb_addr%1000 >= 700)&&(mdb_addr%1000 < 800)&&(channel < RELE_NUM)){
                     result.value.p_byte = &dcts_rele[channel].state.control_by_act;
                 }else{
                     result.error = DCTS_ADDR_ERR;
@@ -373,32 +407,39 @@ dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
 #if ACT_NUM
             case GROUP_ACT:
                 result.type = DCTS_VAL_BYTE;
-                if((mdb_addr%1000 < 100)&&(channel < MEAS_NUM*2)){
-                    result.type = DCTS_VAL_FLOAT;
-                    result.value.p_f = &dcts_act[channel/2].set_value;
-                    if(channel%2 == 0){
-                        result.value.p_word++;
+                if((mdb_addr%1000 < 700)&&(channel < ACT_NUM)){
+                    uint8_t elem_nmb = mdb_addr%100;
+                    channel = (mdb_addr%1000)/100;
+                    if(elem_nmb < dcts_array[channel].array_size*2){
+                        switch(dcts_array[channel].type){
+                        case NUM_U8_T:
+                        case NUM_S8_T:
+                            result.value.p_byte = dcts_array[channel].array[elem_nmb].p_uint8;
+                            break;
+                        case NUM_U16_T:
+                        case NUM_S16_T:
+                            result.type = DCTS_VAL_WORD;
+                            result.value.p_word = dcts_array[channel].array[elem_nmb].p_uint16;
+                            break;
+                        case NUM_U32_T:
+                        case NUM_S32_T:
+                        case NUM_FLOAT_T:
+                            result.type = DCTS_VAL_FLOAT;
+                            result.value.p_f = dcts_array[channel].array[elem_nmb/2].p_float;
+                            if(elem_nmb%2 == 0){
+                                result.value.p_word++;
+                            }
+                            break;
+                        }
+                    }else{
+                        result.error = DCTS_ADDR_ERR;
                     }
-                }else if((mdb_addr%1000 >= 100)&&(mdb_addr%1000 < 200)&&(channel < MEAS_NUM*2)){
-                    result.type = DCTS_VAL_FLOAT;
-                    result.value.p_f = &dcts_act[channel/2].meas_value;
-                    if(channel%2 == 0){
-                        result.value.p_word++;
-                    }
-                }else if((mdb_addr%1000 >= 200)&&(mdb_addr%1000 < 300)&&(channel < MEAS_NUM*2)){
-                    result.type = DCTS_VAL_FLOAT;
-                    result.value.p_f = &dcts_act[channel/2].hysteresis;
-                    if(channel%2 == 0){
-                        result.value.p_word++;
-                    }
-                }else if((mdb_addr%1000 >= 300)&&(mdb_addr%1000 < 400)&&(channel < MEAS_NUM)){
-                    result.value.p_byte = &dcts_act[channel].state.control;
-                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < MEAS_NUM)){
-                    result.value.p_byte = &dcts_act[channel].state.pin_state;
-                }else if((mdb_addr%1000 >= 500)&&(mdb_addr%1000 < 600)&&(channel < MEAS_NUM)){
-                    result.value.p_byte = &dcts_act[channel].state.short_cir;
-                }else if((mdb_addr%1000 >= 600)&&(mdb_addr%1000 < 700)&&(channel < MEAS_NUM)){
-                    result.value.p_byte = &dcts_act[channel].state.fall;
+                }else if((mdb_addr%1000 >= 700)&&(mdb_addr%1000 < 800)&&(channel < ACT_NUM)){
+                    result.value.p_byte = (uint8_t*)dcts_array[channel].type;
+                }else if((mdb_addr%1000 >= 800)&&(mdb_addr%1000 < 900)&&(channel < ACT_NUM)){
+                    result.value.p_byte = &dcts_array[channel].size_in_bytes;
+                }else if((mdb_addr%1000 >= 900)&&(channel < ACT_NUM)){
+                    result.value.p_byte = &dcts_array[channel].array_size;
                 }else{
                     result.error = DCTS_ADDR_ERR;
                 }
@@ -406,19 +447,37 @@ dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
 #endif //ACT_NUM
 #if ALRM_NUM
             case GROUP_ALRM:
-                if((mdb_addr%1000 >= 300)&&(mdb_addr%1000 < 400)&&(channel < MEAS_NUM)){
+                if((mdb_addr%1000 >= 300)&&(mdb_addr%1000 < 400)&&(channel < ALRM_NUM)){
                     result.value.p_byte = &dcts_alrm[channel].time.hour;
-                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < MEAS_NUM)){
+                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < ALRM_NUM)){
                     result.value.p_byte = &dcts_alrm[channel].time.minute;
-                }else if((mdb_addr%1000 >= 500)&&(mdb_addr%1000 < 600)&&(channel < MEAS_NUM)){
+                }else if((mdb_addr%1000 >= 500)&&(mdb_addr%1000 < 600)&&(channel < ALRM_NUM)){
                     result.value.p_byte = &dcts_alrm[channel].time.second;
-                }else if((mdb_addr%1000 >= 600)&&(mdb_addr%1000 < 700)&&(channel < MEAS_NUM)){
+                }else if((mdb_addr%1000 >= 600)&&(mdb_addr%1000 < 700)&&(channel < ALRM_NUM)){
                     result.value.p_byte = &dcts_alrm[channel].enable;
                 }else{
                     result.error = DCTS_ADDR_ERR;
                 }
                 break;
 #endif //ALRM_NUM
+#if ARRAY_NUM
+            case GROUP_ARRAY:
+                result.type = DCTS_VAL_BYTE;
+                if((mdb_addr%1000 >= 300)&&(mdb_addr%1000 < 400)&&(channel < ARRAY_NUM)){
+                    result.value.p_byte = &dcts_rele[channel].state.control;
+                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < ARRAY_NUM)){
+                    result.value.p_byte = &dcts_rele[channel].state.status;
+                }else if((mdb_addr%1000 >= 500)&&(mdb_addr%1000 < 600)&&(channel < ARRAY_NUM)){
+                    result.value.p_byte = &dcts_rele[channel].state.short_cir;
+                }else if((mdb_addr%1000 >= 600)&&(mdb_addr%1000 < 700)&&(channel < ARRAY_NUM)){
+                    result.value.p_byte = &dcts_rele[channel].state.fall;
+                }else if((mdb_addr%1000 >= 700)&&(mdb_addr%1000 < 800)&&(channel < ARRAY_NUM)){
+                    result.value.p_byte = &dcts_rele[channel].state.control_by_act;
+                }else{
+                    result.error = DCTS_ADDR_ERR;
+                }
+                break;
+#endif //ARRAY_NUM
             default:
                 result.error = DCTS_ADDR_ERR;
             }

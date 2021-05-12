@@ -24,6 +24,9 @@ act_t dcts_act[ACT_NUM];
 #if (ALRM_NUM)
 alrm_t dcts_alrm[ALRM_NUM];
 #endif // ALRM_NUM
+#if (ARRAY_NUM)
+array_t dcts_array[ARRAY_NUM];
+#endif // ARRAY_NUM
 /**
   * @}
   */
@@ -218,6 +221,62 @@ int dcts_alrm_channel_init(uint8_t Channel, char Name[], char Name_cyr[]){
         dcts_alrm[Channel].time.minute = 0;
         dcts_alrm[Channel].time.second = 0;
         dcts_alrm[Channel].enable = 0;
+    }else{
+        result = -1;
+    }
+    return result;
+}
+
+/**
+ * @brief Set dcts_array params
+ * @param Number
+ * @param Name
+ * @param Name_cyr
+ * @param Type
+ * @param Array_size
+ * @return  0 - OK\n,
+ *          -1 - Channel number out of range\n,
+ *          -2 - Type error
+ */
+int dcts_array_init(uint8_t Number, char Name[], char Name_cyr[], num_array_type_t  Type, uint8_t Array_size, void * p_Array){
+    int result = 0;
+    if(Number < ARRAY_NUM){
+        strcpy (dcts_alrm[Number].name, Name);
+        strcpy (dcts_alrm[Number].name_cyr, Name_cyr);
+        dcts_array[Number].type = Type;
+        dcts_array[Number].array_size = Array_size;
+        switch(Type){
+        case NUM_U8_T:
+            dcts_array[Number].size_in_bytes = 1;
+            dcts_array[Number].array->p_uint8 = (uint8_t*)p_Array;
+            break;
+        case NUM_S8_T:
+            dcts_array[Number].size_in_bytes = 1;
+            dcts_array[Number].array->p_int8 = (int8_t*)p_Array;
+            break;
+        case NUM_U16_T:
+            dcts_array[Number].size_in_bytes = 2;
+            dcts_array[Number].array->p_uint16 = (uint16_t*)p_Array;
+            break;
+        case NUM_S16_T:
+            dcts_array[Number].size_in_bytes = 2;
+            dcts_array[Number].array->p_int16 = (int16_t*)p_Array;
+            break;
+        case NUM_U32_T:
+            dcts_array[Number].size_in_bytes = 4;
+            dcts_array[Number].array->p_uint32 = (uint32_t*)p_Array;
+            break;
+        case NUM_S32_T:
+            dcts_array[Number].size_in_bytes = 4;
+            dcts_array[Number].array->p_int32 = (int32_t*)p_Array;
+            break;
+        case NUM_FLOAT_T:
+            dcts_array[Number].size_in_bytes = 4;
+            dcts_array[Number].array->p_float = (float*)p_Array;
+            break;
+        default:
+            result = -2;
+        }
     }else{
         result = -1;
     }

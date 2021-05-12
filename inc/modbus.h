@@ -95,6 +95,7 @@ typedef enum{
     GROUP_RELE,
     GROUP_ACT,
     GROUP_ALRM,
+    GROUP_ARRAY,
 }dcts_group_t;
 
 /*========== FUNCTION PROTOTYPES ==========*/

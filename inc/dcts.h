@@ -32,6 +32,12 @@
 #ifndef ALRM_NUM
 #define ALRM_NUM    0
 #endif
+#ifndef ARRAY_NUM
+#define ARRAY_NUM   0
+#endif
+#if(ARRAY_NUM > 6)
+#error (ARRAY_NUM_max = 6)
+#endif
 #define FALSE   0
 #define TRUE    1
 
@@ -184,6 +190,53 @@ typedef struct {
     alarm_time_t time;                      // время срабатывания будильника (ежедневно)
     uint8_t     enable;                     // состояние будильника (0 - выключенб 1 - включен)
 } alrm_t;
+/**
+  * @brief Types for num
+  * @ingroup DCTS
+  */
+typedef enum {
+    NUM_UNKWOWN_T = 0,
+    NUM_U8_T,
+    NUM_S8_T,
+    NUM_U16_T,
+    NUM_S16_T,
+    NUM_U32_T,
+    NUM_S32_T,
+    //NUM_U64_T,
+    //NUM_S64_T,
+    NUM_FLOAT_T,
+    //NUM_DOUBLE_T,
+} num_array_type_t;
+/**
+  * @brief Union of pointers to array
+  * @ingroup DCTS
+  */
+typedef union {
+    uint8_t *   p_uint8;
+    int8_t *    p_int8;
+    uint16_t *  p_uint16;
+    int16_t *   p_int16;
+    uint32_t *  p_uint32;
+    int32_t *   p_int32;
+    //uint64_t *  p_uint64;
+    //int64_t *   p_int64;
+    float *     p_float;
+    //double *    p_double;
+} num_array_p_value_t;
+/**
+  * @brief Struct for numeric array
+  * @ingroup DCTS
+  */
+typedef struct {
+    char        name[CHANNEL_NAME_LEN];     // строковое название массива
+    char        name_cyr[CHANNEL_NAME_LEN]; // строковое название массива кириллицей
+    num_array_type_t  type;                 // тип элементов массива
+    uint8_t     size_in_bytes;              // размер типа в байтах
+    uint8_t     array_size;                 // общее количество элементов массива (не более 100 для типов uint8_t, int8_t,
+                                            // uint16_t, int16_t и не более 50 для типов float, uint32_t, int32_t)
+    num_array_p_value_t * array;            // ссылка на массив
+} array_t;
+
 
 /*========== GLOBAL VARS ==========*/
 
@@ -192,6 +245,7 @@ extern meas_t dcts_meas[];
 extern rele_t dcts_rele[];
 extern act_t dcts_act[];
 extern alrm_t dcts_alrm[];
+extern array_t dcts_array[];
 
 /*========== FUNCTION PROTOTYPES ==========*/
 
@@ -204,5 +258,6 @@ int dcts_meas_channel_init(uint8_t Channel, char Name[], char Name_cyr[], char U
 int dcts_act_channel_init(uint8_t Channel, char Name[], char Name_cyr[], char Unit[], char Unit_cyr[]);
 int dcts_rele_channel_init(uint8_t Channel, char Name[], char Name_cyr[]);
 int dcts_alrm_channel_init(uint8_t Channel, char Name[], char Name_cyr[]);
+int dcts_array_init(uint8_t Number, char Name[], char Name_cyr[], num_array_type_t  Type, uint8_t Array_size, void * p_Array);
 
 #endif /*DCTS*/
