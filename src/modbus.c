@@ -407,39 +407,32 @@ dcts_mdb_t modbus_get_dcts_by_mdb_addr (u16 mdb_addr){
 #if ACT_NUM
             case GROUP_ACT:
                 result.type = DCTS_VAL_BYTE;
-                if((mdb_addr%1000 < 700)&&(channel < ACT_NUM)){
-                    uint8_t elem_nmb = mdb_addr%100;
-                    channel = (mdb_addr%1000)/100;
-                    if(elem_nmb < dcts_array[channel].array_size*2){
-                        switch(dcts_array[channel].type){
-                        case NUM_U8_T:
-                        case NUM_S8_T:
-                            result.value.p_byte = dcts_array[channel].array[elem_nmb].p_uint8;
-                            break;
-                        case NUM_U16_T:
-                        case NUM_S16_T:
-                            result.type = DCTS_VAL_WORD;
-                            result.value.p_word = dcts_array[channel].array[elem_nmb].p_uint16;
-                            break;
-                        case NUM_U32_T:
-                        case NUM_S32_T:
-                        case NUM_FLOAT_T:
-                            result.type = DCTS_VAL_FLOAT;
-                            result.value.p_f = dcts_array[channel].array[elem_nmb/2].p_float;
-                            if(elem_nmb%2 == 0){
-                                result.value.p_word++;
-                            }
-                            break;
-                        }
-                    }else{
-                        result.error = DCTS_ADDR_ERR;
+                if((mdb_addr%1000 < 100)&&(channel < MEAS_NUM*2)){
+                    result.type = DCTS_VAL_FLOAT;
+                    result.value.p_f = &dcts_act[channel/2].set_value;
+                    if(channel%2 == 0){
+                        result.value.p_word++;
                     }
-                }else if((mdb_addr%1000 >= 700)&&(mdb_addr%1000 < 800)&&(channel < ACT_NUM)){
-                    result.value.p_byte = (uint8_t*)dcts_array[channel].type;
-                }else if((mdb_addr%1000 >= 800)&&(mdb_addr%1000 < 900)&&(channel < ACT_NUM)){
-                    result.value.p_byte = &dcts_array[channel].size_in_bytes;
-                }else if((mdb_addr%1000 >= 900)&&(channel < ACT_NUM)){
-                    result.value.p_byte = &dcts_array[channel].array_size;
+                }else if((mdb_addr%1000 >= 100)&&(mdb_addr%1000 < 200)&&(channel < MEAS_NUM*2)){
+                    result.type = DCTS_VAL_FLOAT;
+                    result.value.p_f = &dcts_act[channel/2].meas_value;
+                    if(channel%2 == 0){
+                        result.value.p_word++;
+                    }
+                }else if((mdb_addr%1000 >= 200)&&(mdb_addr%1000 < 300)&&(channel < MEAS_NUM*2)){
+                    result.type = DCTS_VAL_FLOAT;
+                    result.value.p_f = &dcts_act[channel/2].hysteresis;
+                    if(channel%2 == 0){
+                        result.value.p_word++;
+                    }
+                }else if((mdb_addr%1000 >= 300)&&(mdb_addr%1000 < 400)&&(channel < MEAS_NUM)){
+                    result.value.p_byte = &dcts_act[channel].state.control;
+                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < MEAS_NUM)){
+                    result.value.p_byte = &dcts_act[channel].state.pin_state;
+                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < MEAS_NUM)){
+                    result.value.p_byte = &dcts_act[channel].state.short_cir;
+                }else if((mdb_addr%1000 >= 400)&&(mdb_addr%1000 < 500)&&(channel < MEAS_NUM)){
+                    result.value.p_byte = &dcts_act[channel].state.fall;
                 }else{
                     result.error = DCTS_ADDR_ERR;
                 }
@@ -557,7 +550,7 @@ u8 modbus_crc16_check(u8* pckt,u16 lenght){
  * */
 u8 modbus_packet_for_me(u8* pckt,u16 lenght){
     if (lenght){
-        if ((pckt[0] != config.params.mdb_address)  &&
+        if ((pckt[0] != dcts.dcts_address)  &&
             (pckt[0] != MODBUS_BROADCAST_ADDRESS)){
             return 0;
         }else{
@@ -837,7 +830,7 @@ u16 modbus_rtu_packet (u8* pckt,u16 len_in){
     return len_reply;
 }
 u8 genenerate_error_packet(u8* packet,u8 error_code){
-    packet[0] = (u8)config.params.mdb_address;
+    packet[0] = (u8)dcts.dcts_address;
     packet[1] |=0x80;
     packet[2] = error_code;
     *(u16 *)(void*)(&packet[3]) = modbus_crc16 (packet, 3);
