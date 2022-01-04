@@ -72,13 +72,13 @@ typedef enum {
   * @ingroup DCTS
   */
 typedef struct {                // структура, содержащая дату и время
-    uint8_t     day;            // число
-    uint8_t     month;          // месяц
-    uint16_t    year;           // год
-    uint8_t     weekday;        // день недели
-    uint8_t     hour;           // часы (в 24-часовом формате)
-    uint8_t     minute;         // минуты
-    uint8_t     second;         // секунды
+    uint8_t     day;            // число    [1:31]
+    uint8_t     month;          // месяц    [1:12]
+    uint16_t    year;           // год      [0:9999]
+    uint8_t     weekday;        // день недели [1:7]
+    uint8_t     hour;           // часы     [0:23]
+    uint8_t     minute;         // минуты   [0:59]
+    uint8_t     second;         // секунды  [0:59]
     rtc_state_t state;          // состояние часов
 } rtc_t;
 /**
